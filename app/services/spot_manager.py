@@ -46,6 +46,14 @@ class SpotDLManager:
     def download_music(self, url):
         command = f'spotdl download {url}'
         subprocess.run(command)
+    
+    @staticmethod    
+    def update_playlist_m3u(playlist_name):
+        playlist_name_s = f'{playlist_name}.m3u'
+        playlist_name_spotdl = f'{playlist_name}.spotdl'
+        command = f'spotdl sync {playlist_name_spotdl} -m3u {playlist_name_s}'
+        subprocess.run(command, cwd=playlist_name)
+        
         
         
     def spotMngr(self, mode, user, url="", playlist_name="", noN_delete=False):
@@ -54,10 +62,12 @@ class SpotDLManager:
             path = os.path.join(user_path, playlist_name)
             SpotDLManager.run_in_dir(path, self.sync_spotify_playlist, playlist_name, noN_delete)
             SpotDLManager.run_in_dir(path, SpotDLManager.copy_files_skip_existing, f'{user_path}/library/')
+            SpotDLManager.run_in_dir(path, SpotDLManager.update_playlist_m3u, playlist_name)
         elif mode == 'create_synced':
             path=user_path
             SpotDLManager.run_in_dir(path, self.create_synced_playlist, url, playlist_name)
-            SpotDLManager.run_in_dir(path + playlist_name + "/", SpotDLManager.copy_files_skip_existing, f'{user_path}/library/') 
+            SpotDLManager.run_in_dir(os.path.join(path, playlist_name), SpotDLManager.copy_files_skip_existing, f'{user_path}/library/')
+            SpotDLManager.run_in_dir(os.path.join(path, playlist_name), SpotDLManager.update_playlist_m3u, playlist_name) 
         elif mode == 'download':
             path = os.path.join(user_path, "library")
             SpotDLManager.run_in_dir(path, self.download_music, url)
